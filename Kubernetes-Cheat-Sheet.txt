@@ -1,0 +1,821 @@
+**************************************************************************************
+				Kubernets Lab
+**************************************************************************************
+
+Configure the Environment & Create GKE Cluster 
+Execute below command (one by one)
+-------------------------------------------------
+
+
+
+# Set Project Id 
+	gcloud config set project [Project_ID]
+	
+
+# Set default region/zone  
+	gcloud config set compute/region us-central1
+	gcloud config set compute/zone-us-central-a 
+
+# Enable GKE/GCR API's 
+
+	gcloud services enable container.googleapis.com
+	gcloud services enable containerregistry.googleapis.com 
+	
+# create Kubernetes Engine Cluster (Nodes) named 'hello-custer' 
+	gcloud container clusters create hello-cluster --num-nodes=2
+	
+# Generating a kubeconfig entry 
+    gcloud container clusters get-credentials hello-cluster
+
+#Go to yaml files directory 
+	cd ~/k8s-gcp-training/k8s/ 
+	
+# Go to yal
+Day 1
+-----
+	git clone https://github.com/imadfaruqi/kubernetes-training
+
+	cd k8s-training/k8s-d1/
+
+Day 2
+-----
+	cd k8s-training
+
+	git pull
+
+	cd k8s-d2
+-------------------------------------------------
+		POD
+-------------------------------------------------
+
+1.1 Create Pod
+
+	kubectl create -f mypod.yaml
+
+1.2 Get/Describe/View Pod
+
+	kubectl get pods
+
+	kubectl get pods -l app=myapp-pod 
+
+	kubectl get pod -o wide
+
+	kubectl describe pod <POD-NAME>
+
+	kubectl logs <POD-NAME>
+
+1.3 Open Terminal to Pod
+
+	kubectl exec -it <POD-NAME> -- /bin/sh
+
+	curl localhost
+
+	exit
+
+1.4 Delete Pod
+
+	kubectl delete pod <POD-NAME>
+
+-------------------------------------------------
+		Replica Set
+-------------------------------------------------
+
+2.1 Create Replica Set
+
+	kubectl create -f myrs.yaml
+
+2.2 Get/Describe/View Replica Set
+
+	kubectl get rs
+
+	kubectl get rs -l app=myapp-rs
+
+	kubectl describe rs <ReplicaSet-NAME>
+
+2.3 Delete ReplicaSet
+
+	kubectl delete rs <ReplicaSet-NAME>
+
+-------------------------------------------------
+		Deployment
+-------------------------------------------------
+
+3.1 Create Name Space
+
+	kubectl create namespace <Namespace-Name>
+	
+	kubectl get namespace
+
+3.2 Apply YAML
+
+	kubectl create -f mydeployment.yaml -n <Namespace-Name>
+
+3.3 Get/Describe/View Pod
+
+	kubectl get deployments -n <Namespace-Name>
+
+	kubectl describe deployments <DEPLOYMENT-NAME>  -n <Namespace-Name>
+
+3.4 Delete Pod (Don’t execute it in lab)
+
+	kubectl delete deployment <DEPLOYMENT-NAME>  -n <Namespace-Name>
+
+	kubectl delete -f mydeployment.yaml  -n <Namespace-Name>
+
+-------------------------------------------------
+		Config
+-------------------------------------------------
+# View Config
+
+	kubectl config view
+
+# Set Namespace in Context
+
+	kubectl config set-context --current --namespace=<Namespace-Name>
+
+-------------------------------------------------
+		Service
+-------------------------------------------------
+
+4.1 Create Service
+
+	kubectl create -f myservice.yaml
+
+4.2 Get/Describe Service
+
+	kubectl get service
+
+	kubectl describe service <SERVICE-NAME>
+
+	kubectl get endpoints
+
+4.3 Test Service
+
+	kubectl create -f test-pod.yaml
+
+	kubectl exec -it mytest-pod -- /bin/sh
+
+	wget -O- <service-cluster-ip>:8000
+
+	wget -O- my-service:8000
+
+4.4 Delete Service (Don’t execute it in lab)
+
+	kubectl delete service <SERVICE-NAME>
+
+-------------------------------------------------
+		NetworkPolicy
+-------------------------------------------------
+
+5.1 Create Network Policy
+
+	kubectl create -f mynp.yaml
+
+5.2 Get/Describe NetworkPolicy
+
+	kubectl get NetworkPolicy
+
+	kubectl describe NetworkPolicy <NetworkPolicy>
+
+5.3 Test NetworkPolicy
+
+	kubectl create -f test-pod.yaml
+
+	kubectl get pod -o wide
+
+	kubectl exec -it mytest-pod -- /bin/sh
+
+	wget -O- <POD-IP-Address>
+
+	exit
+
+5.4 Delete NetworkPolicy (Don’t execute it in lab)
+
+	kubectl delete NetworkPolicy <NetworkPolicy>
+
+-------------------------------------------------
+		Service Cont.
+-------------------------------------------------
+
+6.1 Create Service with Load Balancer
+
+	kubectl create -f myservice-lb.yaml
+
+6.2 Access application through Browser
+	
+	Open Browser and hit Service EXTERNAL-IP
+
+6.3 Create Service with NodePort
+
+	kubectl create -f myservice-np.yaml
+
+6.4 Access application through Browser (May not work if firewall rules are not properly setup for cluster)
+
+	#Get Nodes public ip address and use any one of them	
+	kubectl get nodes -o wide
+
+	#Access application using browser
+	Open Browser and hit Service EXTERNAL-IP
+
+-------------------------------------------------
+		Ingress
+-------------------------------------------------
+
+7.1 Create Ingress
+
+	kubectl create-f myingress.yaml
+
+7.2 Get/Describe Ingress
+
+	kubectl get ingress
+
+	kubectl describe ingress <INGRESS-NAME>
+
+7.3 Open Browser and Go to below URL
+
+	https://URL
+
+7.4 Delete Ingress
+
+	kubectl delete ingress <INGRESS-NAME>
+
+-------------------------------------------------
+		    Volume
+-------------------------------------------------
+
+8.1 Create a Pod with Empty Volume (Two Container Pod)
+
+	kubectl create -f pod-empty-vol.yaml
+
+8.2 Open a terminal to nginx container and check volume (if pod has more than one container, use -c <container-name>)
+
+	kubectl exec -it empty-vol-pd -c nginx -- /bin/sh 
+
+	cd /my-volume
+
+	exit
+
+8.3 Create a PersistentVolume
+
+	kubectl create -f pv.yaml 
+
+	kubectl get pv 
+
+8.4 Create a PersistentVolumeClaim
+
+	kubectl create -f pvc.yaml 
+	
+	kubectl get pvc # will show Status as 'Bound'
+	
+	kubectl get pv # will show Status as 'Bound' as well
+
+8.5 Create a Pod using PersistentVolumeClaim
+
+	kubectl create -f pod-pvc.yaml
+
+	kubectl exec -it pod-pvc -- /bin/sh
+
+	cd /etc/foo
+
+	exit
+
+-------------------------------------------------
+		Job
+-------------------------------------------------
+
+9.1 Create Job
+
+	kubectl apply -f job.yaml
+
+9.2 Get/Describe Job, Check Log
+
+	kubectl get jobs,pod
+
+	kubectl logs jobs/busybox
+
+	kubectl describe jobs busybox
+
+9.3 Create Job with activeDeadlineSeconds (terminate job if it doesn't complete in given seconds)
+
+	kubectl apply -f job-ad.yaml
+
+	kubectl get jobs,pod
+
+9.4 Create Job with completions (Run given number of times, one after the other)
+
+	kubectl apply -f job-comp.yaml
+
+	kubectl get jobs,pod
+
+9.5 Create Job with parallelism (Run parallel instances for given number of instances)
+
+	kubectl apply -f job-par.yaml
+
+	kubectl get jobs,pod
+
+9.6 Delete Job
+
+	kubectl delete job <JOB-NAME>
+
+-------------------------------------------------
+		Cron Job
+-------------------------------------------------
+
+10.1 Create Cron Job
+
+	kubectl apply -f cronjob.yaml
+
+10.2 Get/Describe Cron Job
+
+	kubectl get cronjob
+
+	kubectl describe cronjob mycj
+
+10.3 Check log
+
+	 kubectl logs jobs/<JOB-NAME>
+
+10.4 Delete Cron Job
+
+	kubectl delete cronjob mycj
+
+-------------------------------------------------
+		ENV Variable
+-------------------------------------------------
+
+11.1 Create a Pod using Env variables
+
+	kubectl create -f pod-env.yaml
+
+11.2 Execute env command to see container's env variables
+
+	kubectl exec pod-env -- env
+
+-------------------------------------------------
+		Secrets
+-------------------------------------------------
+
+12.1 Create a Generic Secret from Literal
+
+	kubectl create secret generic mysecret --from-literal=password=mypass
+
+12.2 Get/Describe Secret
+
+	kubectl get secret 
+
+	kubectl describe secret mysecret
+
+12.3 View Secret (Secret is based 64 encoded, use -d for decoding)
+
+	kubectl get secret mysecret -o yaml
+
+	echo <copy-secret-value-here> | base64 -d 
+
+12.4 Create a Secret from a File (-n doesn't print the trailing newline)
+
+	echo -n admin > username 
+
+	kubectl create secret generic mysecret2 --from-file=username
+
+12.5 Create Pod (Get Secret in Volume)
+
+	kubectl create -f pod-sec-vol.yaml
+
+	kubectl exec -it pod-sec-vol -- /bin/sh
+
+	ls /etc/foo  # shows file username
+
+	cat /etc/foo/username # shows admin
+
+	exit
+
+12.6 Create Pod (Get Secret Value in Env Variable)
+
+	kubectl create -f pod-sec-ev.yaml
+
+	kubectl exec pod-sec-ev -- env
+
+-------------------------------------------------
+		ConfigMap
+-------------------------------------------------
+
+13.1 Create ConfigMap from Literal
+
+	kubectl create cm options --from-literal=var5=val5
+
+13.2 Get/Describe ConfigMap 
+
+	kubectl get cm
+
+	kubectl describe cm <ConfigMap-Name>
+
+13.3 Create ConfigMap from File (Uses fileName as key and all contents in file becomes a single value)
+
+	echo -e "foo3=lili\nfoo4=lele" > config.txt
+
+	kubectl create cm configmap2 --from-file=config.txt
+
+	kubectl get cm configmap2 -o yaml
+
+13.4 Create ConfigMap from File using a Key
+
+	echo -e "var3=val3\nvar4=val4" > config4.txt
+
+	kubectl create cm configmap4 --from-file=myKey=config4.txt
+
+	kubectl describe cm configmap4
+
+13.5 Create ConfigMap from a ENV file (Keys and values are read from env file, could have mulitple keys and values, It ignores comments and blank lines)
+
+	echo -e "var1=val1\n# this is a comment\n\nvar2=val2\n#anothercomment" > config.env
+
+	kubectl create cm configmap3 --from-env-file=config.env
+
+	kubectl get cm configmap3 -o yaml
+
+13.6 Create Pod (Get ConfigMap Value in Env Variable based on Key)
+
+	kubectl create -f pod-cm-evf.yaml
+
+	kubectl exec pod-cm-evf -- env
+
+13.7 Create Pod (Get all ConfigMap Values in Env Variables. Config Map Key becomes Env Variable name)
+
+	kubectl create configmap anotherone --from-literal=var6=val6 --from-literal=var7=val7
+
+	kubectl create -f pod-cm-ev.yaml
+
+	kubectl exec pod-cm-ev -- env
+
+13.8 Create Pod (Get all ConfigMap Values in Volume)
+
+	kubectl create configmap cmvolume --from-literal=var8=val8 --from-literal=var9=val9
+
+	kubectl create -f pod-cm-vol.yaml
+
+	kubectl exec -it pod-cm-vol -- /bin/sh
+
+	cd /etc/lala
+
+	ls # will show var8 var9
+
+	cat var8 # will show val8
+
+	exit
+
+-------------------------------------------------
+		Deploymment
+-------------------------------------------------
+
+14.1 Create a deployment my-deployment with image nginx:1.7.8, called my-container
+
+	kubectl create -f deployment_ro.yaml
+
+14.2 Check how the deployment rollout is going
+	
+	kubectl rollout status deploy my-deployment
+
+14.3 Update the my-container image to nginx:1.7.9
+
+	kubectl set image deploy my-deployment my-container=nginx:1.7.9
+
+14.4 Check the rollout history, deployment, replicas and pod
+
+	kubectl rollout history deploy my-deployment
+
+	kubectl get deploy my-deployment
+
+	kubectl get rs # check that a new replica set has been created
+
+	kubectl get po
+
+14.5 Undo the latest rollout and verify that new pods have the old image (nginx:1.7.8)
+
+	kubectl rollout undo deploy my-deployment
+
+	kubectl get po # select one 'Running' Pod
+
+	kubectl describe po <POD-NAME> | grep -i image # should be nginx:1.7.8
+
+14.6 Do an on purpose update of the deployment with a wrong image nginx:1.91
+
+	kubectl set image deploy my-deployment my-container=nginx:1.91
+
+	kubectl rollout status deploy my-deployment
+	# or
+	kubectl get po # you'll see 'ErrImagePull'
+
+14.7 Return the deployment to the second revision (number 2) and verify the image is nginx:1.7.9
+
+	kubectl rollout undo deploy my-deployment --to-revision=2
+
+	kubectl describe deploy my-deployment | grep Image:
+
+	kubectl rollout status deploy my-deployment # Everything should be OK
+
+14.8 Check the details of the fourth revision (number 4)
+
+	kubectl rollout history deploy my-deployment --revision=4 # You'll also see the wrong image displayed here
+
+14.9 Pause the rollout of the deployment
+
+	kubectl rollout pause deploy my-deployment
+
+14.10 Update the image to nginx:1.9.1 and check that there's nothing going on, since we paused the rollout
+
+	kubectl set image deploy my-deployment my-container=nginx:1.9.1
+
+	# change the image to nginx:1.9.1
+	kubectl rollout history deploy my-deployment # no new revision
+
+14.11 Resume the rollout and check that the nginx:1.9.1 image has been applied
+
+	kubectl rollout resume deploy my-deployment
+
+	kubectl rollout history deploy my-deployment
+
+	kubectl rollout history deploy my-deployment --revision=6 # insert the number of your latest revision
+
+14.12 Delete all deployment, replicaset, pods, servics
+
+	kubectl delete deploy,rs,po,svc --all
+
+-------------------------------------------------
+		Labels/Annotations
+-------------------------------------------------
+
+15.1 Create my-nginx Pod and annotate with "description='my description'" value
+
+	kubectl create -f pod-ann.yaml
+
+	kubectl annotate po my-nginx description='my description'
+
+15.2 Check the annotations for pod my-nginx
+
+	kubectl describe po my-nginx | grep -i 'annotations' -A 6
+
+15.3 Remove the annotations from pod my-nginx
+
+	kubectl annotate po my-nginx description-
+
+15.4 Show all labels of the pods
+
+	kubectl get po --show-labels
+
+15.5 Add new labels to pod 'my-nginx'
+	
+	kubectl label po my-nginx tier=frontend
+
+15.6 Change the labels of pod 'my-nginx' to be app=v2
+	
+	kubectl label po my-nginx app=v2 --overwrite
+
+15.7 Get the label 'app' for the pods
+
+	kubectl get po -L app
+
+15.8 Remove the 'app' label from the pod my-nginx
+
+	kubectl label po my-nginx app-
+
+15.9 Delete all deployment, replicaset, pods, servics
+
+	kubectl delete deploy,rs,po,svc --all
+
+-------------------------------------------------
+     Scaling / Horizontal Pod Auto Scaling
+-------------------------------------------------
+
+16.1 Create deployment
+
+	kubectl create -f deployment_ro.yaml
+
+16.2 Scale the deployment to 5 replicas
+
+	kubectl scale deploy my-deployment --replicas=5
+
+	kubectl get po
+
+	kubectl describe deploy my-deployment
+
+16.3 Autoscale the deployment, pods between 5 and 10, targeting CPU utilization at 80%
+
+	kubectl autoscale deployment my-deployment --min=5 --max=10 --cpu-percent=80
+
+16.4 Get all Horizontal Pod Autoscaler
+
+	kubectl get hpa
+
+16.5 Delete the deployment and the horizontal pod autoscaler
+
+	kubectl delete deploy my-deployment
+
+	kubectl delete hpa my-deployment
+
+16.6 Delete all deployment, replicaset, pods, servics
+
+	kubectl delete deploy,rs,po,svc --all
+
+-----------------------------------------------------------
+        Liveness and Readiness Probes/Init Container
+-----------------------------------------------------------
+
+17.1 Create Pod and describe it
+
+	kubectl create -f pod-live.yaml
+
+	kubectl describe po pod-live
+
+17.2 Create Pod and describe it
+
+	kubectl create -f pod-ready.yaml
+
+	kubectl describe po pod-ready
+
+17.3 Create Pod with InitContainer
+
+	kubectl create -f pod-init.yaml
+
+	kubectl get pods
+
+	kubectl logs pod-init -c busybox -f
+
+17.4 Delete all deployment, replicaset, pods, servics
+
+	kubectl delete deploy,rs,po,svc --all
+
+-------------------------------------------------
+        Kubectl Create/Run
+-------------------------------------------------
+
+18.1 Create a deployment
+
+	kubectl create deploy deploy001 --image=nginx 
+
+	kubectl get deploy
+
+18.2 Edit the deployment to add replicas: 3 and containerPort=80
+
+	kubectl edit deploy deploy001
+
+18.3 Create a service that exposes the deployment
+
+	kubectl expose deploy deploy001 --port=8000 --target-port=80
+
+	kubectl get service
+
+18.4 Create a deployment yaml file
+
+	kubectl create deploy deploy001 --image=nginx --dry-run=client -o yaml > deploy001.yaml
+
+	cat deploy001.yaml
+
+18.5 Create a Pod and Service
+
+	kubectl run nginx001 --image=nginx --env=var1=value1 --labels="app=web,tier=backend" --port=80 --expose
+
+	kubectl get po,svc
+
+18.6 Create a Pod YAML
+
+	kubectl run busybox001 --image=busybox --env=var1=value1 --labels="app=web,tier=backend" --dry-run=client -o yaml -- /bin/sh -c 'echo hello world;sleep 6000' > busybox001.yaml
+
+	cat busybox001.yaml
+
+18.7 Create a temp nginx Pod
+
+	kubectl run tmp-busybox002 --image=bash --rm -it -- /bin/sh -c 'wget -O- www.google.com'
+
+	kubectl get po
+
+18.8 Create a Job
+
+	kubectl create job busybox002 --image=busybox -- /bin/sh -c 'echo hello;sleep 15;echo world'
+
+	kubectl get job,pod
+
+18.9 Create a CronJob yaml file
+
+	kubectl create cronjob busybox001 --image=busybox --schedule="*/1 * * * *" --dry-run=client -o yaml -- /bin/sh -c 'echo hello world;sleep 6000' > cj.yaml
+
+	cat cj.yaml
+
+18.10 Delete all deployment, replicaset, pods, servics
+
+	kubectl delete deploy,rs,po,svc --all
+
+-------------------------------------------------
+		ServiceAccounts
+-------------------------------------------------
+
+19.1 See all the service accounts of the cluster in all namespaces
+
+	kubectl get sa --all-namespaces
+
+19.2 See all the service accounts in current namespaces
+
+	kubectl get sa
+
+19.3 Create a new serviceaccount called 'myuser'
+
+	kubectl create sa myuser
+
+19.4 Create an nginx pod that uses 'myuser' as a service account
+
+	kubectl run nginx-sa --image=nginx --serviceaccount=myuser -o yaml --dry-run=client > pod-sa.yaml
+
+	cat pod-sa.yaml
+
+	kubectl apply -f pod-sa.yaml
+
+19.5 Delete all deployment, replicaset, pods, servics
+
+	kubectl delete deploy,rs,po,svc --all
+
+-------------------------------------------------
+		SecurityContext
+-------------------------------------------------
+
+
+
+
+20.1 Create Pod using SecurityContext with user ID 101
+
+	kubectl create -f pod-sec-contx.yaml
+
+	kubectl get pod
+
+20.1 Create Pod using SecurityContext that has the capabilities "NET_ADMIN", "SYS_TIME" 
+
+	kubectl create -f pod-sec-cap.yaml
+
+	kubectl get pod
+
+15.9 Delete all deployment, replicaset, pods, servics
+
+	kubectl delete deploy,rs,po,svc --all
+
+-------------------------------------------------
+     ResourceQuota/POD Requests and Limits
+-------------------------------------------------
+
+21.1 Create YAML for ResourceQuota with hard limits of 1 CPU, 1G memory and 2 pods
+
+	kubectl create quota myrq --hard=cpu=1,memory=1G,pods=2 --dry-run=client -o yaml
+
+21.2 Create an nginx pod with requests cpu=100m,memory=256Mi and limits cpu=200m,memory=512Mi
+
+	kubectl run nginx --image=nginx --requests='cpu=100m,memory=256Mi' --limits='cpu=200m,memory=512Mi' --dry-run=client -o yaml > pod-req-limit.yaml
+
+	cat pod-req-limit.yaml
+
+21.3 Delete all deployment, replicaset, pods, servics
+
+	kubectl delete deploy,rs,po,svc --all
+
+-------------------------------------------------
+		General
+-------------------------------------------------
+100.1 View all objects in current namespace
+
+	kubectl get all
+
+100.2 View all objects in all namespaces
+
+	kubectl  get all --all-namespaces
+
+100.3 Delete all objects created out of that file
+	
+	kubectl delete -f <file-name>
+
+100.4 Apply/Re-apply file (will not work for all objects e.g. Pod)
+	
+	kubectl apply -f <file-name>
+
+100.5 Get all Nodes in Cluster
+
+	kubectl get nodes -o wide
+
+100.6 Explain any Kubernetes API object
+
+	kubectl explain <pod/rs/deploy/....> --recursive
+
+100.7 Explain Pod
+
+	kubectl explain pod --recursive
+
+100.8 Explain Pod's Specification
+
+	kubectl explain pod.spec --recursive
+
+100.9 Explain Pod's Specification and grep usage of envFrom
+
+	kubectl explain pod.spec --recursive | grep envFrom -A 10
+
+100.10 Get help for any Kubernetes command
+
+	kubectl help <get/describe/delete/....>
+
+100.11 Display Resource (CPU/Memory/Storage) usage of pods
+
+	kubectl top pods
